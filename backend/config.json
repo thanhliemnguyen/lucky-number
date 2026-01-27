@@ -16,7 +16,7 @@
   },
   "banner": {
     "enabled": true,
-    "image": "https://lucky.publicvm.com/images/banner.png",
+    "image": "https://lucky-number-backend-5s67.onrender.com/images/banner.png",
     "link": "",
     "alt": "Banner quảng cáo"
   }

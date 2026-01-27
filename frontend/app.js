@@ -1,4 +1,4 @@
-const API_URL = 'https://lucky.publicvm.com'; // Backend URL
+const API_URL = 'https://lucky-number-backend-5s67.onrender.com'; // Backend URL
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
