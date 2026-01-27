@@ -18,7 +18,7 @@ async function enhanceAnalysis(number, basicAnalysis) {
 
   try {
     console.log(`🤖 Number ${number}: Calling Gemini AI...`);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
     const prompt = `Bạn là chuyên gia Tử Vi Số Học. Phân tích chi tiết số ${number} (${basicAnalysis.name}) với các khía cạnh:
 - Tính cách: ${basicAnalysis.aspect.personality}
