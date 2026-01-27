@@ -19,8 +19,7 @@ async function enhanceAnalysis(number, basicAnalysis) {
         // 1. Sử dụng model 'gemini-1.5-flash' (Tốt nhất cho bản Free: Nhanh, nhẹ, ổn định)
         // Hoặc dùng 'gemini-2.0-flash-exp' nếu bạn muốn thử nghiệm bản mới nhất
         const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash',
-            // Thiết lập System Instruction để AI hiểu vai trò ngay từ đầu
+            model: 'gemini-2.5-flash',
             systemInstruction: "Bạn là chuyên gia Tử Vi Số Học chuyên nghiệp. Hãy phân tích các khía cạnh dựa trên dữ liệu đầu vào. Trả về kết quả bằng tiếng Việt, phong cách thân thiện.",
         });
 
@@ -82,7 +81,7 @@ async function suggestBabyNames(fatherName, motherName) {
   try {
     console.log(`👶 Calling Gemini AI for baby names...`);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: "Bạn là chuyên gia đặt tên theo phong thủy và tử vi số học Việt Nam.",
     });
 
@@ -134,14 +133,14 @@ async function explainLuckyNumber(number, userName, birthDate, todayEnergy) {
   try {
     console.log(`🔮 Explaining lucky number ${number}...`);
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash',
       systemInstruction: "Bạn là chuyên gia thần số học, giải thích sự tương tác năng lượng giữa số và con người.",
     });
 
     const generationConfig = {
       temperature: 1.1,
       maxOutputTokens: 500,
-      responseMimeType: "application/json",
+      responseMimeType: "text/plain",
     };
 
     const prompt = `Người dùng: ${userName}
@@ -168,10 +167,21 @@ Trả về JSON:
 
     const response = await result.response;
     const text = response.text();
-    const data = JSON.parse(text);
-
-    console.log(`✅ Lucky number explanation completed`);
-    return data;
+    
+    // Tìm JSON trong response
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      try {
+        const data = JSON.parse(jsonMatch[0]);
+        console.log(`✅ Lucky number explanation completed`);
+        return data;
+      } catch (parseError) {
+        console.error(`❌ JSON parse error: ${parseError.message}`);
+      }
+    }
+    
+    console.log('Raw response:', text);
+    return null;
 
   } catch (error) {
     console.error(`❌ Gemini explanation error: ${error.message}`);
