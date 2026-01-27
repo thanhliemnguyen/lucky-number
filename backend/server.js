@@ -3,6 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { connectDB, getStats, saveStats } = require('./db');
+const { enhanceAnalysis } = require('./gemini');
 
 const app = express();
 app.use(cors());
@@ -113,9 +114,11 @@ app.post('/api/lucky-number', async (req, res) => {
   
   for (let i = 0; i < count; i++) {
     const num = (baseNumber + i * 11) % 100;
+    const basicAnalysis = getTuViAnalysis(num);
+    const enhanced = await enhanceAnalysis(num, basicAnalysis);
     numbers.push({
       value: num,
-      analysis: getTuViAnalysis(num)
+      analysis: enhanced
     });
   }
   
