@@ -3,7 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { connectDB, getStats, saveStats } = require('./db');
-const { enhanceAnalysis } = require('./gemini');
+const { enhanceAnalysis, suggestBabyNames, explainLuckyNumber } = require('./gemini');
 
 const app = express();
 app.use(cors());
@@ -72,6 +72,30 @@ function calculateLuckyNumber(day, month, year, name) {
   return total;
 }
 
+// Tính năng lượng ngày hôm nay
+function getTodayEnergy() {
+  const today = new Date();
+  const day = today.getDate();
+  const month = today.getMonth() + 1;
+  const year = today.getFullYear();
+  const sum = day + month + year;
+  const energy = (sum % 9) || 9;
+  
+  const energyMap = {
+    1: "Khởi đầu, lãnh đạo",
+    2: "Hợp tác, cân bằng",
+    3: "Sáng tạo, giao tiếp",
+    4: "Ổn định, xây dựng",
+    5: "Biến động, tự do",
+    6: "Yêu thương, gia đình",
+    7: "Tâm linh, trí tuệ",
+    8: "Quyền lực, tài chính",
+    9: "Hoàn thiện, nhân đạo"
+  };
+  
+  return { number: energy, meaning: energyMap[energy] };
+}
+
 // Tạo tên ngẫu nhiên
 function generateBabyName(fatherName, motherName) {
   const lastNameFather = fatherName.trim().split(' ')[0];
@@ -110,15 +134,29 @@ app.post('/api/lucky-number', async (req, res) => {
   await saveStats(stats);
   
   const baseNumber = calculateLuckyNumber(parseInt(day), parseInt(month), parseInt(year), name);
+  const todayEnergy = getTodayEnergy();
   const numbers = [];
   
   for (let i = 0; i < count; i++) {
     const num = (baseNumber + i * 11) % 100;
     const basicAnalysis = getTuViAnalysis(num);
     const enhanced = await enhanceAnalysis(num, basicAnalysis);
+    
+    // Giải thích số may mắn (chỉ cho số đầu tiên)
+    let explanation = null;
+    if (i === 0) {
+      explanation = await explainLuckyNumber(
+        num, 
+        name, 
+        `${day}/${month}/${year}`,
+        `${todayEnergy.number} - ${todayEnergy.meaning}`
+      );
+    }
+    
     numbers.push({
       value: num,
-      analysis: enhanced
+      analysis: enhanced,
+      explanation: explanation
     });
   }
   
@@ -126,7 +164,8 @@ app.post('/api/lucky-number', async (req, res) => {
     luckyNumber: baseNumber,
     numbers,
     date: `${day}/${month}/${year}`,
-    name
+    name,
+    todayEnergy
   });
 });
 
@@ -151,12 +190,20 @@ app.post('/api/baby-name', async (req, res) => {
   if (stats.history.length > 100) stats.history = stats.history.slice(-100);
   await saveStats(stats);
   
-  const suggestions = [];
-  for (let i = 0; i < 5; i++) {
-    suggestions.push(generateBabyName(fatherName, motherName));
-  }
+  // Thử dùng AI trước
+  const aiSuggestions = await suggestBabyNames(fatherName, motherName);
   
-  res.json({ suggestions });
+  if (aiSuggestions && aiSuggestions.length > 0) {
+    // AI thành công
+    res.json({ suggestions: aiSuggestions, aiPowered: true });
+  } else {
+    // Fallback: tạo tên ngẫu nhiên
+    const suggestions = [];
+    for (let i = 0; i < 5; i++) {
+      suggestions.push(generateBabyName(fatherName, motherName));
+    }
+    res.json({ suggestions, aiPowered: false });
+  }
 });
 
 // API: Lấy config

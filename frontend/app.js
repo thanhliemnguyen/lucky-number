@@ -67,14 +67,40 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
         
         let html = '';
         
+        // Hiển thị năng lượng ngày
+        if (result.todayEnergy) {
+            html += `
+                <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:15px;border-radius:10px;margin-bottom:20px;text-align:center;">
+                    <strong>🌟 Năng lượng ngày hôm nay: ${result.todayEnergy.number}</strong>
+                    <p style="margin:5px 0 0 0;">${result.todayEnergy.meaning}</p>
+                </div>
+            `;
+        }
+        
         if (data.count === 1) {
             const analysis = result.numbers[0].analysis;
-            html = `
+            const explanation = result.numbers[0].explanation;
+            
+            html += `
                 <div class="lucky-display">
                     <h3>Số May Mắn Của Bạn</h3>
                     <div class="lucky-number">${analysis.number}</div>
                     <p><strong>${data.name}</strong> - ${result.date}</p>
-                    
+            `;
+            
+            // Hiển thị giải thích AI
+            if (explanation) {
+                html += `
+                    <div style="background:#f0f7ff;padding:15px;border-radius:10px;margin:15px 0;border-left:4px solid #4CAF50;">
+                        <p style="margin:0 0 10px 0;color:#4CAF50;font-weight:bold;">✨ Tại sao số này may mắn hôm nay?</p>
+                        <p style="margin:0 0 10px 0;">${explanation.explanation}</p>
+                        <p style="margin:0 0 10px 0;"><strong>🔥 Năng lượng:</strong> ${explanation.energy}</p>
+                        <p style="margin:0;color:#666;"><strong>💡 Lời khuyên:</strong> ${explanation.advice}</p>
+                    </div>
+                `;
+            }
+            
+            html += `
                     <div class="analysis">
                         <h3>${analysis.name}</h3>
                         <p><strong>Ngũ hành:</strong> ${analysis.element}</p>
@@ -142,10 +168,27 @@ document.getElementById('baby-form').addEventListener('submit', async (e) => {
         
         const result = await res.json();
         
-        let html = '<h3>Gợi Ý Tên Cho Bé:</h3><div class="name-list">';
-        result.suggestions.forEach((name, index) => {
-            html += `<div class="name-item">${index + 1}. ${name}</div>`;
-        });
+        let html = '<h3>Gợi Ý Tên Cho Bé:</h3>';
+        
+        if (result.aiPowered) {
+            html += '<p style="color:#4CAF50;margin-bottom:15px;">✨ Được tạo bởi AI - Phân tích sâu theo phong thủy</p>';
+            html += '<div class="name-list">';
+            result.suggestions.forEach((item, index) => {
+                html += `
+                    <div class="name-item" style="border-left:3px solid #4CAF50;padding-left:15px;margin-bottom:15px;">
+                        <strong style="font-size:1.2em;color:#667eea;">${index + 1}. ${item.name}</strong>
+                        <p><strong>🌿 Ý nghĩa:</strong> ${item.meaning}</p>
+                        <p><strong>✨ Ngũ hành:</strong> ${item.element}</p>
+                        <p><strong>🎯 Điểm số:</strong> ${item.score}</p>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<div class="name-list">';
+            result.suggestions.forEach((name, index) => {
+                html += `<div class="name-item">${index + 1}. ${name}</div>`;
+            });
+        }
         html += '</div>';
         
         document.getElementById('baby-result').innerHTML = html;
