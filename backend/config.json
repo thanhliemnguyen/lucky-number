@@ -1,0 +1,23 @@
+{
+  "donate": {
+    "enabled": true,
+    "methods": [
+      {
+        "name": "Momo",
+        "info": "0123456789",
+        "qr": ""
+      },
+      {
+        "name": "Banking",
+        "info": "MB Bank - 0123456789 - NGUYEN VAN A",
+        "qr": ""
+      }
+    ]
+  },
+  "banner": {
+    "enabled": true,
+    "image": "https://lucky.publicvm.com/images/banner.png",
+    "link": "",
+    "alt": "Banner quảng cáo"
+  }
+}

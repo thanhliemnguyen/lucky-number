@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Số May Mắn - Xem Vận Số Hôm Nay</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="banner-container"></div>
+    
+    <div class="container">
+        <header>
+            <h1>🍀 Số May Mắn Hôm Nay</h1>
+            <p>Khám phá vận số của bạn qua Tử Vi Số Học</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab active" data-tab="lucky">Số May Mắn</button>
+            <button class="tab" data-tab="baby">Đặt Tên Con</button>
+        </div>
+
+        <div id="lucky-tab" class="tab-content active">
+            <div class="card">
+                <h2>Tính Số May Mắn Theo Ngày</h2>
+                <form id="lucky-form">
+                    <div class="form-group">
+                        <label>Họ và tên:</label>
+                        <input type="text" id="name" required placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ngày:</label>
+                            <input type="number" id="day" min="1" max="31" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tháng:</label>
+                            <input type="number" id="month" min="1" max="12" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Năm:</label>
+                            <input type="number" id="year" min="1900" max="2100" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Số lượng số may mắn:</label>
+                        <select id="count" class="form-select">
+                            <option value="1">1 số</option>
+                            <option value="2">Cặp số (2 số)</option>
+                            <option value="3">3 số</option>
+                            <option value="4">4 số</option>
+                            <option value="8">8 số</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn">Xem Số May Mắn</button>
+                </form>
+                <div id="lucky-result" class="result"></div>
+            </div>
+        </div>
+
+        <div id="baby-tab" class="tab-content">
+            <div class="card">
+                <h2>Gợi Ý Tên Con</h2>
+                <form id="baby-form">
+                    <div class="form-group">
+                        <label>Tên bố:</label>
+                        <input type="text" id="father-name" required placeholder="Nguyễn Văn A">
+                    </div>
+                    <div class="form-group">
+                        <label>Tên mẹ:</label>
+                        <input type="text" id="mother-name" required placeholder="Trần Thị B">
+                    </div>
+                    <button type="submit" class="btn">Tạo Tên</button>
+                </form>
+                <div id="baby-result" class="result"></div>
+            </div>
+        </div>
+
+        <div id="donate-container" class="card donate"></div>
+    </div>
+
+    <footer>
+        <p>© 2024 Lucky Number - Chúc bạn may mắn!</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

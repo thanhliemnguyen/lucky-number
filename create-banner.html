@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Banner</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .banner {
+            width: 1200px;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 0 auto;
+        }
+        .banner::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            top: -100px;
+            left: -100px;
+        }
+        .banner::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -50px;
+            right: -50px;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+        .icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        h1 {
+            color: #FFD700;
+            font-size: 36px;
+            font-weight: bold;
+            margin: 0;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+        h2 {
+            color: #FFD700;
+            font-size: 42px;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            color: white;
+            font-size: 18px;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 25px;
+            border-radius: 25px;
+            margin-top: 10px;
+        }
+        .coins {
+            position: absolute;
+            font-size: 30px;
+            animation: spin 4s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .coin1 { top: 30px; left: 100px; }
+        .coin2 { top: 50px; right: 150px; }
+        .coin3 { bottom: 40px; left: 200px; }
+        .coin4 { bottom: 60px; right: 100px; }
+        .stars {
+            position: absolute;
+            font-size: 25px;
+            animation: twinkle 2s ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        .star1 { top: 80px; left: 50px; }
+        .star2 { top: 100px; right: 80px; }
+        .star3 { bottom: 80px; left: 150px; }
+        .star4 { bottom: 100px; right: 200px; }
+        .instructions {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 1200px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 15px 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner" id="banner">
+        <div class="coins coin1">🪙</div>
+        <div class="coins coin2">🪙</div>
+        <div class="coins coin3">🪙</div>
+        <div class="coins coin4">🪙</div>
+        
+        <div class="stars star1">✨</div>
+        <div class="stars star2">⭐</div>
+        <div class="stars star3">🍀</div>
+        <div class="stars star4">🔮</div>
+        
+        <div class="content">
+            <div class="icon">🔢🍀</div>
+            <h1>KHÁM PHÁ</h1>
+            <h2>SỐ MAY MẮN CỦA BẠN!</h2>
+            <div class="subtitle">Vận may đang chờ đón. Xem ngay!</div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>📸 Cách lưu banner:</h3>
+        <ol>
+            <li>Nhấn nút "Tải Banner" bên dưới</li>
+            <li>Ảnh sẽ tự động tải về máy</li>
+            <li>Đổi tên file thành <code>banner.png</code></li>
+            <li>Copy vào thư mục <code>frontend/images/</code></li>
+            <li>Khởi động lại backend</li>
+        </ol>
+        <p><strong>Hoặc:</strong> Nhấn chuột phải vào banner → "Save image as..." → Lưu thành <code>banner.png</code></p>
+        <button onclick="downloadBanner()">📥 Tải Banner</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        function downloadBanner() {
+            const banner = document.getElementById('banner');
+            html2canvas(banner, {
+                scale: 2,
+                backgroundColor: null
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'banner.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
