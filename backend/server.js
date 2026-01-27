@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { connectDB, getStats, saveStats } = require('./db');
 
 const app = express();
 app.use(cors());
@@ -9,12 +10,9 @@ app.use(express.json());
 app.use('/images', express.static(path.join(__dirname, '../frontend/images')));
 
 const configPath = path.join(__dirname, 'config.json');
-const statsPath = path.join(__dirname, 'stats.json');
 
-// Khởi tạo stats
-if (!fs.existsSync(statsPath)) {
-  fs.writeFileSync(statsPath, JSON.stringify({ totalVisits: 0, luckyNumberRequests: 0, babyNameRequests: 0, history: [] }, null, 2));
-}
+// Kết nối DB khi khởi động
+connectDB();
 
 // Phân tích số tử vi cho 540 tổ hợp (00-99 x 6 yếu tố)
 function getTuViAnalysis(num) {
@@ -89,7 +87,7 @@ function generateBabyName(fatherName, motherName) {
 }
 
 // API: Tính số may mắn
-app.post('/api/lucky-number', (req, res) => {
+app.post('/api/lucky-number', async (req, res) => {
   const { day, month, year, name, count = 1 } = req.body;
   
   if (!day || !month || !year || !name) {
@@ -97,8 +95,9 @@ app.post('/api/lucky-number', (req, res) => {
   }
   
   // Lưu thống kê
-  const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+  const stats = await getStats();
   stats.luckyNumberRequests++;
+  stats.history = stats.history || [];
   stats.history.push({
     type: 'lucky-number',
     name,
@@ -107,7 +106,7 @@ app.post('/api/lucky-number', (req, res) => {
     timestamp: new Date().toISOString()
   });
   if (stats.history.length > 100) stats.history = stats.history.slice(-100);
-  fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
+  await saveStats(stats);
   
   const baseNumber = calculateLuckyNumber(parseInt(day), parseInt(month), parseInt(year), name);
   const numbers = [];
@@ -129,7 +128,7 @@ app.post('/api/lucky-number', (req, res) => {
 });
 
 // API: Tạo tên con
-app.post('/api/baby-name', (req, res) => {
+app.post('/api/baby-name', async (req, res) => {
   const { fatherName, motherName } = req.body;
   
   if (!fatherName || !motherName) {
@@ -137,8 +136,9 @@ app.post('/api/baby-name', (req, res) => {
   }
   
   // Lưu thống kê
-  const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+  const stats = await getStats();
   stats.babyNameRequests++;
+  stats.history = stats.history || [];
   stats.history.push({
     type: 'baby-name',
     fatherName,
@@ -146,7 +146,7 @@ app.post('/api/baby-name', (req, res) => {
     timestamp: new Date().toISOString()
   });
   if (stats.history.length > 100) stats.history = stats.history.slice(-100);
-  fs.writeFileSync(statsPath, JSON.stringify(stats, null, 2));
+  await saveStats(stats);
   
   const suggestions = [];
   for (let i = 0; i < 5; i++) {
@@ -169,8 +169,8 @@ app.post('/api/config', (req, res) => {
 });
 
 // API: Lấy thống kê (admin only)
-app.get('/admin/stats', (req, res) => {
-  const stats = JSON.parse(fs.readFileSync(statsPath, 'utf8'));
+app.get('/admin/stats', async (req, res) => {
+  const stats = await getStats();
   res.json(stats);
 });
 
