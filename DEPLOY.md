@@ -58,10 +58,10 @@ git push -u origin main
 
 ### Bước 3: Đợi Deploy
 - Render sẽ tự động build (3-5 phút)
-- Khi xong, bạn sẽ có URL: `https://lucky.publicvm.com`
+- Khi xong, bạn sẽ có URL: `https://lucky-number-backend-5s67.onrender.com`
 
 ### Bước 4: Kiểm tra
-- Truy cập: `https://lucky.publicvm.com/api/config`
+- Truy cập: `https://lucky-number-backend-5s67.onrender.com/api/config`
 - Nếu thấy JSON config → Thành công! ✅
 
 ### ⚠️ Lưu ý quan trọng:
@@ -91,18 +91,18 @@ git push -u origin main
 
 ### Bước 3: Đợi Deploy
 - Vercel sẽ deploy (1-2 phút)
-- Bạn sẽ có URL: `https://lucky.publicvm.com`
+- Bạn sẽ có URL: `https://lucky-number-five.vercel.app`
 
 ### Bước 4: Cập nhật API URL
 1. File `frontend/app.js` đã được cấu hình sẵn:
 ```javascript
-const API_URL = 'https://lucky.publicvm.com';
+const API_URL = 'https://lucky-number-backend-5s67.onrender.com';
 ```
 
 4. Push code lên GitHub → Vercel tự động redeploy
 
 ### Bước 5: Kiểm tra
-- Truy cập: `https://lucky.publicvm.com`
+- Truy cập: `https://lucky-number-five.vercel.app`
 - Thử tính số may mắn → Nếu hoạt động → Thành công! ✅
 
 ---
@@ -160,7 +160,7 @@ const API_URL = 'https://lucky.publicvm.com';
 {
   "banner": {
     "enabled": true,
-    "image": "https://lucky.publicvm.com/images/banner.png",
+    "image": "https://lucky-number-five.vercel.app/images/banner.png",
     "link": "",
     "alt": ""
   },
@@ -170,7 +170,7 @@ const API_URL = 'https://lucky.publicvm.com';
       {
         "name": "Momo",
         "info": "0123456789",
-        "qr": "https://lucky.publicvm.com/images/momo-qr.png"
+        "qr": "https://lucky-number-five.vercel.app/images/momo-qr.png"
       }
     ]
   }
@@ -182,15 +182,15 @@ const API_URL = 'https://lucky.publicvm.com';
 ### Upload ảnh banner
 1. Copy ảnh `banner.png` vào `frontend/images/`
 2. Push lên GitHub
-3. Ảnh sẽ được serve tại: `https://lucky.publicvm.com/images/banner.png`
+3. Ảnh sẽ được serve tại: `https://lucky-number-five.vercel.app/images/banner.png`
 
 ---
 
 ## 🎯 Tổng Kết
 
 ### URL sau khi deploy:
-- **Website:** `https://lucky.publicvm.com`
-- **Admin:** `https://lucky.publicvm.com/admin.html`
+- **Website:** `https://lucky-number-five.vercel.app`
+- **Admin:** `https://lucky-number-five.vercel.app/admin.html`
 
 ### Chi phí:
 - **Backend (Render):** $0/tháng (Free tier)
