@@ -156,3 +156,6 @@ document.getElementById('baby-form').addEventListener('submit', async (e) => {
 
 // Load config on page load
 loadConfig();
+
+// Set current year in footer
+document.getElementById('year').textContent = new Date().getFullYear();
