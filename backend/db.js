@@ -17,14 +17,29 @@ async function connectDB() {
   }
 }
 
-async function getStats() {
+async function getStats(page = 1, limit = 100) {
   const database = await connectDB();
   if (!database) {
-    return { luckyNumberRequests: 0, babyNameRequests: 0, history: [] };
+    return { luckyNumberRequests: 0, babyNameRequests: 0, history: [], total: 0 };
   }
   
   const stats = await database.collection('stats').findOne({ _id: 'main' });
-  return stats || { luckyNumberRequests: 0, babyNameRequests: 0, history: [] };
+  if (!stats) {
+    return { luckyNumberRequests: 0, babyNameRequests: 0, history: [], total: 0 };
+  }
+  
+  const total = stats.history?.length || 0;
+  const skip = (page - 1) * limit;
+  const history = (stats.history || []).slice(skip, skip + limit);
+  
+  return {
+    luckyNumberRequests: stats.luckyNumberRequests || 0,
+    babyNameRequests: stats.babyNameRequests || 0,
+    history,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit)
+  };
 }
 
 async function saveStats(stats) {

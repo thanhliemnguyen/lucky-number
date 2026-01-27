@@ -173,7 +173,9 @@ app.post('/api/config', (req, res) => {
 
 // API: Lấy thống kê (admin only)
 app.get('/admin/stats', async (req, res) => {
-  const stats = await getStats();
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 100;
+  const stats = await getStats(page, limit);
   res.json(stats);
 });
 
