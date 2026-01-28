@@ -1,4 +1,4 @@
-const API_URL = 'https://lucky-number-backend-5s67.onrender.com'; // Backend URL
+const API_URL = 'http://localhost:3000'; // Local development
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
@@ -48,6 +48,14 @@ async function loadConfig() {
 document.getElementById('lucky-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const resultDiv = document.getElementById('lucky-result');
+    
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '🔮 Đang tính toán...';
+    resultDiv.innerHTML = '<div class="loading">✨ Đang phân tích số may mắn của bạn...</div>';
+    
     const data = {
         name: document.getElementById('name').value,
         day: document.getElementById('day').value,
@@ -77,6 +85,11 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
             `;
         }
         
+        // Hiển thị thông báo AI
+        if (result.aiPowered) {
+            html += '<p style="color:#4CAF50;margin-bottom:15px;text-align:center;">✨ Số may mắn được AI phân tích cá nhân theo tên và ngày sinh của bạn</p>';
+        }
+        
         if (data.count === 1) {
             const analysis = result.numbers[0].analysis;
             const explanation = result.numbers[0].explanation;
@@ -95,7 +108,8 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
                         <p style="margin:0 0 10px 0;color:#4CAF50;font-weight:bold;">✨ Tại sao số này may mắn hôm nay?</p>
                         <p style="margin:0 0 10px 0;">${explanation.explanation}</p>
                         <p style="margin:0 0 10px 0;"><strong>🔥 Năng lượng:</strong> ${explanation.energy}</p>
-                        <p style="margin:0;color:#666;"><strong>💡 Lời khuyên:</strong> ${explanation.advice}</p>
+                        <p style="margin:0 0 10px 0;color:#666;"><strong>💡 Lời khuyên:</strong> ${explanation.advice}</p>
+                        ${explanation.bestTime ? `<p style="margin:0;color:#e74c3c;"><strong>⏰ Thời gian tốt nhất:</strong> ${explanation.bestTime}</p>` : ''}
                     </div>
                 `;
             }
@@ -146,13 +160,25 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
         
         document.getElementById('lucky-result').innerHTML = html;
     } catch (error) {
-        alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        resultDiv.innerHTML = '<div class="error">❌ Có lỗi xảy ra. Vui lòng thử lại!</div>';
+    } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Xem Số May Mắn';
     }
 });
 
 // Baby name form
 document.getElementById('baby-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const resultDiv = document.getElementById('baby-result');
+    
+    // Show loading
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '👶 Đang tạo tên...';
+    resultDiv.innerHTML = '<div class="loading">🌟 AI đang phân tích và tạo tên hay cho bé...</div>';
     
     const data = {
         fatherName: document.getElementById('father-name').value,
@@ -174,12 +200,16 @@ document.getElementById('baby-form').addEventListener('submit', async (e) => {
             html += '<p style="color:#4CAF50;margin-bottom:15px;">✨ Được tạo bởi AI - Phân tích sâu theo phong thủy</p>';
             html += '<div class="name-list">';
             result.suggestions.forEach((item, index) => {
+                const genderIcon = item.gender === 'Nam' ? '👦' : '👧';
                 html += `
-                    <div class="name-item" style="border-left:3px solid #4CAF50;padding-left:15px;margin-bottom:15px;">
-                        <strong style="font-size:1.2em;color:#667eea;">${index + 1}. ${item.name}</strong>
+                    <div class="name-item enhanced" style="border-left:3px solid #4CAF50;padding:15px;margin-bottom:20px;background:#f8fff8;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <strong style="font-size:1.3em;color:#667eea;">${genderIcon} ${item.name}</strong>
+                            <span style="background:#4CAF50;color:white;padding:3px 8px;border-radius:12px;font-size:0.9em;">${item.score}</span>
+                        </div>
                         <p><strong>🌿 Ý nghĩa:</strong> ${item.meaning}</p>
                         <p><strong>✨ Ngũ hành:</strong> ${item.element}</p>
-                        <p><strong>🎯 Điểm số:</strong> ${item.score}</p>
+                        ${item.reason ? `<p><strong>🎯 Lý do:</strong> ${item.reason}</p>` : ''}
                     </div>
                 `;
             });
@@ -193,7 +223,11 @@ document.getElementById('baby-form').addEventListener('submit', async (e) => {
         
         document.getElementById('baby-result').innerHTML = html;
     } catch (error) {
-        alert('Có lỗi xảy ra. Vui lòng thử lại!');
+        resultDiv.innerHTML = '<div class="error">❌ Có lỗi xảy ra. Vui lòng thử lại!</div>';
+    } finally {
+        // Reset button
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Tạo Tên';
     }
 });
 

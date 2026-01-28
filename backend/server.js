@@ -4,7 +4,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { connectDB, getStats, saveStats } = require('./db');
-const { enhanceAnalysis, suggestBabyNames, explainLuckyNumber } = require('./gemini');
+const { enhanceAnalysis, suggestBabyNames, explainLuckyNumber, generateLuckyNumbers } = require('./gemini');
 
 const app = express();
 app.use(cors());
@@ -65,11 +65,12 @@ function getTuViAnalysis(num) {
   };
 }
 
-// Tính số may mắn theo ngày (00-99)
+// Tính số may mắn theo ngày (00-99) - Enhanced with more randomness
 function calculateLuckyNumber(day, month, year, name) {
   const nameValue = name.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
   const dateValue = day + month + year;
-  const total = (dateValue + nameValue) % 100;
+  const timeValue = new Date().getHours() + new Date().getMinutes(); // Add current time
+  const total = (dateValue + nameValue + timeValue) % 100;
   return total;
 }
 
@@ -134,40 +135,71 @@ app.post('/api/lucky-number', async (req, res) => {
   if (stats.history.length > 100) stats.history = stats.history.slice(-100);
   await saveStats(stats);
   
-  const baseNumber = calculateLuckyNumber(parseInt(day), parseInt(month), parseInt(year), name);
   const todayEnergy = getTodayEnergy();
-  const numbers = [];
   
-  for (let i = 0; i < count; i++) {
-    const num = (baseNumber + i * 11) % 100;
-    const basicAnalysis = getTuViAnalysis(num);
-    const enhanced = await enhanceAnalysis(num, basicAnalysis);
+  // Gọi AI để tạo số may mắn
+  const aiResult = await generateLuckyNumbers(name, `${day}/${month}/${year}`, count, todayEnergy);
+  
+  if (aiResult && aiResult.numbers) {
+    // AI thành công
+    const numbers = [];
     
-    // Giải thích số may mắn (chỉ cho số đầu tiên)
-    let explanation = null;
-    if (i === 0) {
-      explanation = await explainLuckyNumber(
-        num, 
-        name, 
-        `${day}/${month}/${year}`,
-        `${todayEnergy.number} - ${todayEnergy.meaning}`
-      );
+    for (let i = 0; i < aiResult.numbers.length; i++) {
+      const aiNumber = aiResult.numbers[i];
+      const basicAnalysis = getTuViAnalysis(aiNumber.value);
+      const enhanced = await enhanceAnalysis(aiNumber.value, basicAnalysis);
+      
+      // Giải thích số may mắn (chỉ cho số đầu tiên)
+      let explanation = null;
+      if (i === 0) {
+        explanation = await explainLuckyNumber(
+          aiNumber.value, 
+          name, 
+          `${day}/${month}/${year}`,
+          `${todayEnergy.number} - ${todayEnergy.meaning}`,
+          aiNumber.reason
+        );
+      }
+      
+      numbers.push({
+        value: aiNumber.value,
+        analysis: enhanced,
+        explanation: explanation,
+        aiReason: aiNumber.reason
+      });
     }
     
-    numbers.push({
-      value: num,
-      analysis: enhanced,
-      explanation: explanation
+    res.json({
+      numbers,
+      date: `${day}/${month}/${year}`,
+      name,
+      todayEnergy,
+      aiPowered: true
+    });
+  } else {
+    // Fallback: dùng cách cũ
+    const baseNumber = calculateLuckyNumber(parseInt(day), parseInt(month), parseInt(year), name);
+    const numbers = [];
+    
+    for (let i = 0; i < count; i++) {
+      const num = (baseNumber + i * 11) % 100;
+      const basicAnalysis = getTuViAnalysis(num);
+      const enhanced = await enhanceAnalysis(num, basicAnalysis);
+      
+      numbers.push({
+        value: num,
+        analysis: enhanced
+      });
+    }
+    
+    res.json({
+      numbers,
+      date: `${day}/${month}/${year}`,
+      name,
+      todayEnergy,
+      aiPowered: false
     });
   }
-  
-  res.json({
-    luckyNumber: baseNumber,
-    numbers,
-    date: `${day}/${month}/${year}`,
-    name,
-    todayEnergy
-  });
 });
 
 // API: Tạo tên con

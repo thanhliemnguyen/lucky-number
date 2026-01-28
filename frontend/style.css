@@ -181,6 +181,22 @@ header h1 {
     background: #f5f5f5;
     border-radius: 8px;
     border-left: 4px solid #667eea;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.name-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.name-item.enhanced {
+    background: #f8fff8;
+    border-left: 4px solid #4CAF50;
+}
+
+.name-item.enhanced:hover {
+    background: #f0fff0;
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
 }
 
 .donate {
@@ -263,6 +279,43 @@ footer {
 .lucky-badge.Đại.hung {
     background: #F44336;
     color: white;
+}
+
+/* Loading and Error States */
+.loading {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, #74b9ff, #0984e3);
+    color: white;
+    border-radius: 10px;
+    font-size: 1.1em;
+    animation: pulse 2s infinite;
+}
+
+.error {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(135deg, #ff7675, #d63031);
+    color: white;
+    border-radius: 10px;
+    font-size: 1.1em;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.7; }
+    50% { opacity: 1; }
+    100% { opacity: 0.7; }
+}
+
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 @media (max-width: 600px) {
