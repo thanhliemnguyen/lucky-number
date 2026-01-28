@@ -220,40 +220,28 @@ async function generateLuckyNumbers(userName, birthDate, count, todayEnergy) {
     console.log(`🎲 Generating ${count} lucky numbers for ${userName}...`);
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      systemInstruction: "Bạn là chuyên gia thần số học và tử vi số học với khả năng đọc vận số qua tên và ngày sinh.",
+      systemInstruction: "Bạn là chuyên gia thần số học. LUÔN trả về JSON hợp lệ, không có ký tự đặc biệt trong string.",
     });
 
     const generationConfig = {
-      temperature: 1.3,
-      topP: 0.9,
-      maxOutputTokens: 2000,
+      temperature: 1.0,
+      topP: 0.8,
+      maxOutputTokens: 1000,
       responseMimeType: "application/json",
     };
 
-    const currentTime = new Date();
-    const timeOfDay = currentTime.getHours() < 12 ? 'Sáng' : currentTime.getHours() < 18 ? 'Chiều' : 'Tối';
-    const dayOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][currentTime.getDay()];
-
-    const prompt = `Phân tích và đưa ra ${count} số may mắn (từ 00-99) cho:
-- Tên: ${userName}
-- Ngày sinh: ${birthDate}
-- Năng lượng hôm nay: ${todayEnergy.number} - ${todayEnergy.meaning}
-- Thời gian: ${timeOfDay} ${dayOfWeek}
+    const prompt = `Tạo ${count} số may mắn (00-99) cho ${userName} sinh ${birthDate}.
+Năng lượng hôm nay: ${todayEnergy.meaning}
 
 Yêu cầu:
-- Phân tích tên và ngày sinh để tìm số phù hợp
-- Kết hợp với năng lượng ngày hôm nay
-- Mỗi số phải có lý do rõ ràng tại sao may mắn
-- Số khác nhau, không trùng lặp
-- Ưu tiên số có ý nghĩa tốt trong phong thủy
+- Số khác nhau
+- Lý do ngắn gọn
+- JSON hợp lệ
 
-Trả về JSON:
+Format:
 {
   "numbers": [
-    {
-      "value": 88,
-      "reason": "Lý do tại sao số này may mắn cho người này hôm nay"
-    }
+    {"value": 88, "reason": "Số phát tài, hợp tuổi"}
   ]
 }`;
 
@@ -263,15 +251,25 @@ Trả về JSON:
     });
 
     const response = await result.response;
-    const text = response.text();
+    let text = response.text().trim();
+    
+    // Clean up common JSON issues
+    text = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, ''); // Remove control chars
+    text = text.replace(/\\/g, ''); // Remove backslashes
+    
     const data = JSON.parse(text);
-
     console.log(`✅ Generated ${data.numbers.length} lucky numbers`);
     return data;
 
   } catch (error) {
     console.error(`❌ Generate lucky numbers error: ${error.message}`);
-    return null;
+    // Fallback: generate simple numbers
+    const numbers = [];
+    for (let i = 0; i < count; i++) {
+      const value = Math.floor(Math.random() * 100);
+      numbers.push({ value, reason: "Số may mắn được chọn ngẫu nhiên" });
+    }
+    return { numbers };
   }
 }
 
