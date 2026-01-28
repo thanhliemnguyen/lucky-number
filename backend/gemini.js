@@ -2,54 +2,47 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 let genAI = null;
+let requestCount = 0;
+const MAX_REQUESTS_PER_DAY = 15;
 
 if (GEMINI_API_KEY) {
     genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    console.log('✅ Gemini AI enabled');
+    console.log('✅ Gemini AI enabled (Limited to 15 requests/day)');
 } else {
     console.log('⚠️  Gemini AI disabled - using basic analysis');
 }
 
+function canUseAI() {
+    return genAI && requestCount < MAX_REQUESTS_PER_DAY;
+}
+
 async function enhanceAnalysis(number, basicAnalysis) {
-    if (!genAI) return basicAnalysis;
+    if (!canUseAI()) return basicAnalysis;
 
     try {
-        console.log(`🤖 Number ${number}: Calling Gemini AI...`);
+        requestCount++;
+        console.log(`🤖 Number ${number}: AI request ${requestCount}/${MAX_REQUESTS_PER_DAY}`);
 
         const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            systemInstruction: "Bạn là chuyên gia Tử Vi Số Học chuyên nghiệp với 20 năm kinh nghiệm. Hãy phân tích sâu sắc và cá nhân hóa dựa trên dữ liệu đầu vào. Trả về kết quả bằng tiếng Việt, phong cách thân thiện, chuyên sâu.",
+            model: 'gemini-1.5-flash',
+            systemInstruction: "Bạn là chuyên gia Tử Vi Số Học. Trả về JSON hợp lệ.",
         });
 
         const generationConfig = {
-            temperature: 1.2, // Tăng độ sáng tạo
-            topP: 0.9,
-            topK: 40,
-            maxOutputTokens: 8192,
+            temperature: 0.8,
+            topP: 0.8,
+            maxOutputTokens: 1000,
             responseMimeType: "application/json",
         };
 
-        const prompt = `Phân tích chi tiết số ${number} (${basicAnalysis.name}) dựa trên các thông tin cơ bản sau:
-    - Tính cách: ${basicAnalysis.aspect.personality}
-    - Sự nghiệp: ${basicAnalysis.aspect.career}
-    - Tình yêu: ${basicAnalysis.aspect.love}
-    - Sức khỏe: ${basicAnalysis.aspect.health}
-    - Tài chính: ${basicAnalysis.aspect.finance}
-
-    Yêu cầu: 
-    - Viết sâu sắc hơn, mỗi mục khoảng 3-4 câu
-    - Đưa ra lời khuyên cụ thể, thực tế
-    - Sử dụng ngôn ngữ thân thiện, dễ hiểu
-    - Tạo sự khác biệt cho mỗi số, không lặp lại
-    
-    Phải trả về theo cấu trúc JSON:
-    {
-      "personality": "nội dung",
-      "career": "nội dung",
-      "love": "nội dung",
-      "health": "nội dung",
-      "finance": "nội dung"
-    }`;
+        const prompt = `Phân tích số ${number}. Trả về JSON:
+{
+  "personality": "Tính cách",
+  "career": "Sự nghiệp", 
+  "love": "Tình yêu",
+  "health": "Sức khỏe",
+  "finance": "Tài chính"
+}`;
 
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -58,7 +51,6 @@ async function enhanceAnalysis(number, basicAnalysis) {
 
         const response = await result.response;
         const text = response.text();
-
         const enhanced = JSON.parse(text);
 
         console.log(`✅ Number ${number}: AI analysis completed`);
@@ -68,208 +60,118 @@ async function enhanceAnalysis(number, basicAnalysis) {
         };
 
     } catch (error) {
-        console.error(`❌ Number ${number}: Gemini API error - ${error.message}`);
-        return basicAnalysis; // Fallback
+        console.error(`❌ Number ${number}: AI error - ${error.message}`);
+        return basicAnalysis;
     }
 }
 
-async function suggestBabyNames(fatherName, motherName) {
-  if (!genAI) {
-    return null;
+async function generateLuckyNumbers(userName, birthDate, count, todayEnergy) {
+  if (!canUseAI()) {
+    const numbers = [];
+    const goodNumbers = [8, 18, 28, 38, 48, 58, 68, 78, 88, 98, 6, 16, 26, 36, 46, 56, 66, 76, 86, 96];
+    for (let i = 0; i < count; i++) {
+      const value = goodNumbers[Math.floor(Math.random() * goodNumbers.length)];
+      numbers.push({ value, reason: "Số may mắn theo phong thủy" });
+    }
+    return { numbers };
   }
 
   try {
-    console.log(`👶 Calling Gemini AI for baby names...`);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: "Bạn là chuyên gia đặt tên theo phong thủy và tử vi số học Việt Nam với 25 năm kinh nghiệm. Bạn hiểu rõ văn hóa, truyền thống và ý nghĩa của từng tên.",
-    });
-
-    const generationConfig = {
-      temperature: 1.3, // Tăng độ sáng tảo cho tên đa dạng
-      topP: 0.9,
-      maxOutputTokens: 3000,
-      responseMimeType: "application/json",
-    };
-
-    const currentYear = new Date().getFullYear();
-    const currentSeason = Math.floor((new Date().getMonth() + 1) / 3) + 1; // 1-4
-    const seasonNames = ['Xuân', 'Hạ', 'Thu', 'Đông'];
+    requestCount++;
+    console.log(`🎲 AI request ${requestCount}/${MAX_REQUESTS_PER_DAY} for ${userName}`);
     
-    const prompt = `Gợi ý 8 tên hay cho con dựa trên:
-- Tên bố: ${fatherName}
-- Tên mẹ: ${motherName}
-- Năm sinh dự kiến: ${currentYear}
-- Mùa hiện tại: ${seasonNames[currentSeason - 1]}
-
-Yêu cầu:
-- Lấy họ của bố hoặc mẹ (nhưng ưu tiên họ bố)
-- Tên đẹp, ý nghĩa tốt, dễ đọc, dễ viết
-- Phù hợp văn hóa Việt Nam hiện đại
-- Cân bằng âm dương ngũ hành
-- Không dùng tên quá cổ điển hoặc quá lạ
-- Đa dạng giới tính (4 tên nam, 4 tên nữ)
-- Mỗi tên có điểm số từ 85-98/100
-
-Trả về JSON:
-{
-  "suggestions": [
-    {
-      "name": "Tên gợi ý", 
-      "meaning": "Ý nghĩa sâu sắc", 
-      "element": "Ngũ hành tương ứng", 
-      "score": "XX/100",
-      "gender": "Nam/Nữ",
-      "reason": "Lý do chọn tên này"
-    }
-  ]
-}`;
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig,
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      systemInstruction: "Tạo số may mắn. Trả về JSON hợp lệ.",
     });
 
-    const response = await result.response;
-    const text = response.text();
-    const data = JSON.parse(text);
+    const prompt = `Tạo ${count} số may mắn cho ${userName}.
+Trả về:
+{"numbers":[{"value":88,"reason":"Lý do"}]}`;
 
-    console.log(`✅ AI baby names completed: ${data.suggestions.length} names`);
+    const result = await model.generateContent(prompt);
+    const text = result.response.text().trim();
+    const data = JSON.parse(text);
+    
+    console.log(`✅ Generated ${data.numbers.length} numbers`);
+    return data;
+
+  } catch (error) {
+    console.error(`❌ AI error: ${error.message}`);
+    const numbers = [];
+    const goodNumbers = [8, 18, 28, 38, 48, 58, 68, 78, 88, 98];
+    for (let i = 0; i < count; i++) {
+      const value = goodNumbers[Math.floor(Math.random() * goodNumbers.length)];
+      numbers.push({ value, reason: "Số may mắn theo phong thủy" });
+    }
+    return { numbers };
+  }
+}
+
+async function suggestBabyNames(fatherName, motherName) {
+  if (!canUseAI()) {
+    const lastNames = [fatherName.split(' ')[0], motherName.split(' ')[0]];
+    const midNames = ['Minh', 'Hồng', 'Thanh', 'Bảo', 'Ngọc'];
+    const firstNames = ['An', 'Bình', 'Châu', 'Duy', 'Hà', 'Khang', 'Linh', 'Phúc'];
+    
+    const suggestions = [];
+    for (let i = 0; i < 6; i++) {
+      const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+      const midName = midNames[Math.floor(Math.random() * midNames.length)];
+      const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+      suggestions.push({
+        name: `${lastName} ${midName} ${firstName}`,
+        meaning: "Tên đẹp, ý nghĩa tốt",
+        element: "Cân bằng ngũ hành",
+        score: "90/100"
+      });
+    }
+    return suggestions;
+  }
+
+  try {
+    requestCount++;
+    console.log(`👶 AI request ${requestCount}/${MAX_REQUESTS_PER_DAY} for baby names`);
+    
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const prompt = `Gợi ý 6 tên cho con. Bố: ${fatherName}, Mẹ: ${motherName}.
+Trả về JSON: {"suggestions":[{"name":"Tên","meaning":"Ý nghĩa","element":"Ngũ hành","score":"90/100"}]}`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    const data = JSON.parse(text);
+    
     return data.suggestions;
 
   } catch (error) {
-    console.error(`❌ Gemini AI baby names error: ${error.message}`);
+    console.error(`❌ AI baby names error: ${error.message}`);
     return null;
   }
 }
 
 async function explainLuckyNumber(number, userName, birthDate, todayEnergy, aiReason = null) {
-  if (!genAI) return null;
+  if (!canUseAI()) return null;
 
   try {
-    console.log(`🔮 Explaining lucky number ${number}...`);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: "Bạn là chuyên gia thần số học và phong thủy với khả năng giải thích sự tương tác năng lượng giữa số và con người một cách sâu sắc và thực tế.",
-    });
-
-    const generationConfig = {
-      temperature: 1.1,
-      maxOutputTokens: 800,
-      responseMimeType: "application/json",
-    };
-
-    const currentTime = new Date();
-    const timeOfDay = currentTime.getHours() < 12 ? 'Sáng' : currentTime.getHours() < 18 ? 'Chiều' : 'Tối';
-    const dayOfWeek = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'][currentTime.getDay()];
-
-    const prompt = `Người dùng: ${userName}
-Ngày sinh: ${birthDate}
-Số may mắn: ${number}
-Năng lượng ngày hôm nay: ${todayEnergy}
-Thời gian hiện tại: ${timeOfDay} ${dayOfWeek}
-${aiReason ? `Lý do AI chọn: ${aiReason}` : ''}
-
-Giải thích tại sao số ${number} là số may mắn của ${userName} hôm nay dựa trên:
-- Sự tương tác giữa số chủ đạo và năng lượng ngày
-- Ý nghĩa phong thủy của số trong bối cảnh hiện tại
-- Cách sử dụng số này hiệu quả nhất
-${aiReason ? '- Kết hợp với lý do AI đã phân tích' : ''}
-
-Yêu cầu:
-- Giải thích cá nhân hóa, kết nối với tên và ngày sinh
-- Lời khuyên thực tế, cụ thể cho ngày hôm nay
-- Ngôn ngữ thân thiện, dễ hiểu
-
-Trả về JSON:
-{
-  "explanation": "Giải thích chi tiết 3-4 câu",
-  "energy": "Loại năng lượng chính (Ví dụ: Tài lộc, Tình yêu, Sức khỏe, Sáng tạo)",
-  "advice": "Lời khuyên cụ thể cho ngày hôm nay",
-  "bestTime": "Khoảng thời gian tốt nhất trong ngày"
-}`;
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig,
-    });
-
-    const response = await result.response;
-    const text = response.text();
+    requestCount++;
+    console.log(`🔮 Gemini explaining number ${number} (${requestCount}/${MAX_REQUESTS_PER_DAY})...`);
     
-    try {
-      const data = JSON.parse(text);
-      console.log(`✅ Lucky number explanation completed`);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const prompt = `Giải thích số ${number} cho ${userName}. Trả về JSON: {"explanation":"Giải thích","energy":"Năng lượng","advice":"Lời khuyên","bestTime":"Thời gian tốt"}`;
+
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    
+    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    if (jsonMatch) {
+      const data = JSON.parse(jsonMatch[0]);
       return data;
-    } catch (parseError) {
-      console.error(`❌ JSON parse error: ${parseError.message}`);
-      console.log('Raw response:', text);
-      return null;
     }
+    return null;
 
   } catch (error) {
     console.error(`❌ Gemini explanation error: ${error.message}`);
     return null;
-  }
-}
-
-async function generateLuckyNumbers(userName, birthDate, count, todayEnergy) {
-  if (!genAI) return null;
-
-  try {
-    console.log(`🎲 Generating ${count} lucky numbers for ${userName}...`);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
-      systemInstruction: "Bạn là chuyên gia thần số học. LUÔN trả về JSON hợp lệ, không có ký tự đặc biệt trong string.",
-    });
-
-    const generationConfig = {
-      temperature: 1.0,
-      topP: 0.8,
-      maxOutputTokens: 1000,
-      responseMimeType: "application/json",
-    };
-
-    const prompt = `Tạo ${count} số may mắn (00-99) cho ${userName} sinh ${birthDate}.
-Năng lượng hôm nay: ${todayEnergy.meaning}
-
-Yêu cầu:
-- Số khác nhau
-- Lý do ngắn gọn
-- JSON hợp lệ
-
-Format:
-{
-  "numbers": [
-    {"value": 88, "reason": "Số phát tài, hợp tuổi"}
-  ]
-}`;
-
-    const result = await model.generateContent({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig,
-    });
-
-    const response = await result.response;
-    let text = response.text().trim();
-    
-    // Clean up common JSON issues
-    text = text.replace(/[\u0000-\u001F\u007F-\u009F]/g, ''); // Remove control chars
-    text = text.replace(/\\/g, ''); // Remove backslashes
-    
-    const data = JSON.parse(text);
-    console.log(`✅ Generated ${data.numbers.length} lucky numbers`);
-    return data;
-
-  } catch (error) {
-    console.error(`❌ Generate lucky numbers error: ${error.message}`);
-    // Fallback: generate simple numbers
-    const numbers = [];
-    for (let i = 0; i < count; i++) {
-      const value = Math.floor(Math.random() * 100);
-      numbers.push({ value, reason: "Số may mắn được chọn ngẫu nhiên" });
-    }
-    return { numbers };
   }
 }
 

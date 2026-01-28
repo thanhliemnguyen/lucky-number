@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { connectDB, getStats, saveStats } = require('./db');
 const { enhanceAnalysis, suggestBabyNames, explainLuckyNumber, generateLuckyNumbers } = require('./gemini');
+const { groqGenerateLuckyNumbers, groqSuggestBabyNames, groqEnhanceAnalysis, groqExplainLuckyNumber } = require('./groq');
 
 const app = express();
 app.use(cors());
@@ -115,7 +116,7 @@ function generateBabyName(fatherName, motherName) {
 
 // API: Tính số may mắn
 app.post('/api/lucky-number', async (req, res) => {
-  const { day, month, year, name, count = 1 } = req.body;
+  const { day, month, year, name, count = 1, description = '' } = req.body;
   
   if (!day || !month || !year || !name) {
     return res.status(400).json({ error: 'Thiếu thông tin' });
@@ -137,8 +138,11 @@ app.post('/api/lucky-number', async (req, res) => {
   
   const todayEnergy = getTodayEnergy();
   
-  // Gọi AI để tạo số may mắn
-  const aiResult = await generateLuckyNumbers(name, `${day}/${month}/${year}`, count, todayEnergy);
+  // Gọi AI để tạo số may mắn - thử Groq trước, sau đó Gemini
+  let aiResult = await groqGenerateLuckyNumbers(name, `${day}/${month}/${year}`, count, description);
+  if (!aiResult) {
+    aiResult = await generateLuckyNumbers(name, `${day}/${month}/${year}`, count, todayEnergy);
+  }
   
   if (aiResult && aiResult.numbers) {
     // AI thành công
@@ -147,18 +151,30 @@ app.post('/api/lucky-number', async (req, res) => {
     for (let i = 0; i < aiResult.numbers.length; i++) {
       const aiNumber = aiResult.numbers[i];
       const basicAnalysis = getTuViAnalysis(aiNumber.value);
-      const enhanced = await enhanceAnalysis(aiNumber.value, basicAnalysis);
+      
+      // Chỉ dùng Groq, không fallback Gemini
+      const enhanced = await groqEnhanceAnalysis(aiNumber.value, basicAnalysis) || basicAnalysis;
       
       // Giải thích số may mắn (chỉ cho số đầu tiên)
       let explanation = null;
       if (i === 0) {
-        explanation = await explainLuckyNumber(
+        explanation = await groqExplainLuckyNumber(
           aiNumber.value, 
           name, 
           `${day}/${month}/${year}`,
           `${todayEnergy.number} - ${todayEnergy.meaning}`,
           aiNumber.reason
         );
+        
+        // Nếu Groq lỗi, tạo giải thích đơn giản
+        if (!explanation) {
+          explanation = {
+            explanation: `Số ${aiNumber.value} là số may mắn của bạn hôm nay dựa trên tên và ngày sinh. ${aiNumber.reason || 'Số này mang lại may mắn và thịnh vượng.'}`,
+            energy: "Tài lộc và thành công",
+            advice: "Hãy sử dụng số này trong các quyết định quan trọng hôm nay",
+            bestTime: "Buổi sáng hoặc chiều"
+          };
+        }
       }
       
       numbers.push({
@@ -204,7 +220,7 @@ app.post('/api/lucky-number', async (req, res) => {
 
 // API: Tạo tên con
 app.post('/api/baby-name', async (req, res) => {
-  const { fatherName, motherName } = req.body;
+  const { fatherName, motherName, description = '' } = req.body;
   
   if (!fatherName || !motherName) {
     return res.status(400).json({ error: 'Thiếu thông tin bố mẹ' });
@@ -223,8 +239,8 @@ app.post('/api/baby-name', async (req, res) => {
   if (stats.history.length > 100) stats.history = stats.history.slice(-100);
   await saveStats(stats);
   
-  // Thử dùng AI trước
-  const aiSuggestions = await suggestBabyNames(fatherName, motherName);
+  // Chỉ dùng Groq
+  let aiSuggestions = await groqSuggestBabyNames(fatherName, motherName, description);
   
   if (aiSuggestions && aiSuggestions.length > 0) {
     // AI thành công

@@ -75,7 +75,8 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
         day: document.getElementById('day').value,
         month: document.getElementById('month').value,
         year: document.getElementById('year').value,
-        count: parseInt(document.getElementById('count').value)
+        count: parseInt(document.getElementById('count').value),
+        description: document.getElementById('description').value
     };
     
     try {
@@ -118,12 +119,12 @@ document.getElementById('lucky-form').addEventListener('submit', async (e) => {
             // Hiển thị giải thích AI
             if (explanation) {
                 html += `
-                    <div style="background:#f0f7ff;padding:15px;border-radius:10px;margin:15px 0;border-left:4px solid #4CAF50;">
-                        <p style="margin:0 0 10px 0;color:#4CAF50;font-weight:bold;">✨ Tại sao số này may mắn hôm nay?</p>
-                        <p style="margin:0 0 10px 0;">${explanation.explanation}</p>
-                        <p style="margin:0 0 10px 0;"><strong>🔥 Năng lượng:</strong> ${explanation.energy}</p>
-                        <p style="margin:0 0 10px 0;color:#666;"><strong>💡 Lời khuyên:</strong> ${explanation.advice}</p>
-                        ${explanation.bestTime ? `<p style="margin:0;color:#e74c3c;"><strong>⏰ Thời gian tốt nhất:</strong> ${explanation.bestTime}</p>` : ''}
+                    <div style="background:#fff;padding:20px;border-radius:10px;margin:15px 0;border-left:4px solid #4CAF50;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                        <p style="margin:0 0 15px 0;color:#4CAF50;font-weight:bold;font-size:1.1em;">✨ Tại sao số này may mắn hôm nay?</p>
+                        <p style="margin:0 0 15px 0;color:#333;line-height:1.6;">${explanation.explanation}</p>
+                        <p style="margin:0 0 15px 0;color:#333;"><strong style="color:#e74c3c;">🔥 Năng lượng:</strong> ${explanation.energy}</p>
+                        <p style="margin:0 0 15px 0;color:#333;"><strong style="color:#3498db;">💡 Lời khuyên:</strong> ${explanation.advice}</p>
+                        ${explanation.bestTime ? `<p style="margin:0;color:#333;"><strong style="color:#e67e22;">⏰ Thời gian tốt nhất:</strong> ${explanation.bestTime}</p>` : ''}
                     </div>
                 `;
             }
@@ -196,7 +197,8 @@ document.getElementById('baby-form').addEventListener('submit', async (e) => {
     
     const data = {
         fatherName: document.getElementById('father-name').value,
-        motherName: document.getElementById('mother-name').value
+        motherName: document.getElementById('mother-name').value,
+        description: document.getElementById('baby-description').value
     };
     
     try {
