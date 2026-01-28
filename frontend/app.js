@@ -17,6 +17,8 @@ async function loadConfig() {
         const res = await fetch(`${API_URL}/api/config`);
         const config = await res.json();
         
+        console.log('Config loaded:', config); // Debug
+        
         // Banner - chỉ hiện nếu có ảnh
         if (config.banner.enabled && config.banner.image) {
             const bannerHTML = config.banner.link 
@@ -25,22 +27,34 @@ async function loadConfig() {
             document.getElementById('banner-container').innerHTML = bannerHTML;
         }
         
-        // Donate
-        if (config.donate.enabled) {
+        // Donate - luôn hiển thị nếu enabled
+        if (config.donate && config.donate.enabled) {
             let donateHTML = '<h3>☕ Ủng Hộ Tác Giả</h3><div class="donate-methods">';
-            config.donate.methods.forEach(method => {
-                donateHTML += `
-                    <div class="donate-item">
-                        <strong>${method.name}:</strong> ${method.info}
-                        ${method.qr ? `<br><img src="${method.qr}" style="max-width:200px;margin-top:10px;" alt="">` : ''}
-                    </div>
-                `;
-            });
+            if (config.donate.methods && config.donate.methods.length > 0) {
+                config.donate.methods.forEach(method => {
+                    donateHTML += `
+                        <div class="donate-item">
+                            <strong>${method.name}:</strong> ${method.info}
+                            ${method.qr ? `<br><img src="${method.qr}" style="max-width:200px;margin-top:10px;" alt="QR ${method.name}">` : ''}
+                        </div>
+                    `;
+                });
+            }
             donateHTML += '</div>';
             document.getElementById('donate-container').innerHTML = donateHTML;
+            console.log('Donate HTML set:', donateHTML); // Debug
         }
     } catch (error) {
         console.error('Không thể tải config:', error);
+        // Fallback donate
+        document.getElementById('donate-container').innerHTML = `
+            <h3>☕ Ủng Hộ Tác Giả</h3>
+            <div class="donate-methods">
+                <div class="donate-item">
+                    <strong>Momo:</strong> 0936375290
+                </div>
+            </div>
+        `;
     }
 }
 
