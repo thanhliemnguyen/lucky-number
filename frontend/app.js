@@ -1,4 +1,7 @@
-const API_URL = 'http://localhost:3000'; // Local development
+// Auto-detect API URL based on environment
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://lucky-number-backend-5s67.onrender.com';
 
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {

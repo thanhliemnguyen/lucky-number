@@ -8,9 +8,34 @@ const { enhanceAnalysis, suggestBabyNames, explainLuckyNumber, generateLuckyNumb
 const { groqGenerateLuckyNumbers, groqSuggestBabyNames, groqEnhanceAnalysis, groqExplainLuckyNumber } = require('./groq');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// Enhanced CORS and logging for production
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
 app.use('/images', express.static(path.join(__dirname, '../frontend/images')));
+
+// Request logging
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+  }
+  next();
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('Global error:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal server error', 
+    message: err.message,
+    timestamp: new Date().toISOString()
+  });
+});
 
 const configPath = path.join(__dirname, 'config.json');
 
@@ -116,11 +141,14 @@ function generateBabyName(fatherName, motherName) {
 
 // API: Tính số may mắn
 app.post('/api/lucky-number', async (req, res) => {
-  const { day, month, year, name, count = 1, description = '' } = req.body;
-  
-  if (!day || !month || !year || !name) {
-    return res.status(400).json({ error: 'Thiếu thông tin' });
-  }
+  try {
+    console.log('Lucky number request received:', req.body);
+    const { day, month, year, name, count = 1, description = '' } = req.body;
+    
+    if (!day || !month || !year || !name) {
+      console.log('Missing required fields');
+      return res.status(400).json({ error: 'Thiếu thông tin' });
+    }
   
   // Lưu thống kê
   const stats = await getStats();
@@ -216,15 +244,26 @@ app.post('/api/lucky-number', async (req, res) => {
       aiPowered: false
     });
   }
+  } catch (error) {
+    console.error('Lucky number API error:', error);
+    res.status(500).json({ 
+      error: 'Lỗi xử lý yêu cầu', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // API: Tạo tên con
 app.post('/api/baby-name', async (req, res) => {
-  const { fatherName, motherName, description = '' } = req.body;
-  
-  if (!fatherName || !motherName) {
-    return res.status(400).json({ error: 'Thiếu thông tin bố mẹ' });
-  }
+  try {
+    console.log('Baby name request received:', req.body);
+    const { fatherName, motherName, description = '' } = req.body;
+    
+    if (!fatherName || !motherName) {
+      console.log('Missing father or mother name');
+      return res.status(400).json({ error: 'Thiếu thông tin bố mẹ' });
+    }
   
   // Lưu thống kê
   const stats = await getStats();
@@ -252,6 +291,14 @@ app.post('/api/baby-name', async (req, res) => {
       suggestions.push(generateBabyName(fatherName, motherName));
     }
     res.json({ suggestions, aiPowered: false });
+  }
+  } catch (error) {
+    console.error('Baby name API error:', error);
+    res.status(500).json({ 
+      error: 'Lỗi xử lý yêu cầu', 
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
